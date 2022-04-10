@@ -1,0 +1,24 @@
+torch==1.9.0    
+simple_parsing==0.0.16.post2
+torchvision==0.10.0
+tqdm==4.62.2
+numpy==1.21.2
+dataclasses
+wandb    
+transformers
+sklearn
+fvcore
+ftfy
+regex
+timm  
+tinydb 
+torchnet
+dataclasses-json
+git+https://github.com/Continvvm/continuum.git
+git+https://github.com/openai/CLIP.git
+#then install"
+#pip install --force-reinstall https://github.com/Lucasc-99/continuum.git --no-deps
+#pip install git+https://github.com/openai/CLIP.git
+#pip install git+https://github.com/mapillary/inplace_abn.git@v1.0.12
+#pip install apex -f https://dl.fbaipublicfiles.com/vissl/packaging/apexwheels/{version_str}/download.html
+#source Utils/install_vissl.sh
