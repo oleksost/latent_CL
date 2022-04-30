@@ -3,6 +3,7 @@ import os
 import time
 import wandb
 import torch
+import shutil
 import numpy as np   
 from tqdm import tqdm
 from dataclasses import dataclass
@@ -17,7 +18,7 @@ from torchvision.transforms.transforms import Compose, Lambda, ToTensor
 import continuum
 from args import ArgsGenerator 
 from continuum import ClassIncremental
-from continuum.datasets import _ContinuumDataset
+from continuum.datasets import _ContinuumDataset 
 from continuum.datasets import H5Dataset, InMemoryDataset
 from continuum.tasks import TaskType
 from Models.helper import getKeysByValue
@@ -524,7 +525,7 @@ class DatasetEncoderContinuum(ModelContainer):
     def _load_scenario(self, scenario, dir, file_name, sufix='', encoded=False): 
         #deal with encoding performed by possible concurent runs, encode the scenario first into a temporary folder.
         n=wandb.util.generate_id()
-        dir_temp=f'{dir}/_temp_{n}/'
+        dir_temp=f'{dir}/_temp_{n}/'        
         file_destination = f'{dir}/{file_name}'
         file_temp = f"{dir_temp}/{file_name}"
         assert not os.path.exists(dir_temp)
@@ -534,12 +535,12 @@ class DatasetEncoderContinuum(ModelContainer):
         
         #move and remove
         if not os.path.isfile(file_destination):
-            os.system(f"mv {file_temp} {dir}")
-        os.system(f"rm -r {dir_temp}")
+            shutil.move(file_temp, dir+f"/{file_name}")
+        shutil.rmtree(dir_temp)
 
         if not self.estimate_compute_regime:
             data = self._load_H5Dataset(file_destination)
-        else:
+        else:  
             data=None
         return data
     
@@ -548,7 +549,8 @@ class DatasetEncoderContinuum(ModelContainer):
         #on mila cluster copy to $SLURM_TMPDIR and load the dataset from $SLURM_TMPDIR
         if 'SLURM_TMPDIR' in os.environ:
             temp_dir = os.environ.get('SLURM_TMPDIR')
-            os.system(f"cp -r {file} {temp_dir}")
+            shutil.move(file, temp_dir+f"/{file_name}")
+            # os.system(f"cp -r {file} {temp_dir}")
             data = H5Dataset(x=None, y=None, t=None, data_path=f'{temp_dir}/{file_name}')
         else:
             data = H5Dataset(x=None, y=None, t=None, data_path=f"{file}")

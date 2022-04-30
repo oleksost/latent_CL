@@ -173,3 +173,6 @@ Weights/*
 Scripts
 Scripts/
 Scripts/*
+
+$data_path
+$data_path/*

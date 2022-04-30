@@ -14,7 +14,7 @@ import timm
 from torch.nn.modules.pooling import MaxPool2d 
 # import vissl
 import wandb
-from PIL import Image  
+from PIL import Image    
 from functools import partial  
 from fvcore.nn import parameter_count_table
 from torchvision.models.resnet import resnet18
@@ -32,13 +32,21 @@ from .classifiers import Classifier_nn
 project_home = f"{os.environ.get('LARGE_CL_HOME')}" if "LARGE_CL_HOME" in os.environ else "."
 _models_path = f"{os.environ.get('SCRATCH')}/Weights/" if "SCRATCH" in os.environ else f"{project_home}/Weights"
 
-dataclass  
+@dataclass  
 class PreparedModel:
     encoder: nn.Module
     latent_dim: object
     transformation: object
     transformation_val: object
-EncoderTuple = namedtuple('EncoderTuple',['partial_encoder','pretrained_options','info_string', 'pretrain_dataset'])
+
+@dataclass
+class EncoderTuple:
+    partial_encoder: Callable
+    pretrained_options: List
+    info_string: str
+    pretrain_dataset: str
+
+# EncoderTuple = namedtuple('EncoderTuple',['partial_encoder','pretrained_options','info_string', 'pretrain_dataset'])
                
 def prepare_BIT_model_timm(name, pretrained=True, fix_batchnorms_encoder=True, models_path=_models_path, device='cuda', hidden_layer=None, *args, **kwargs)->PreparedModel:  
         # model = BiT_models.KNOWN_MODELS[name](head_size=10, zero_head=True)
@@ -161,14 +169,8 @@ def prepare_vit_model(encoder_name, pretrained=True, vit_out_layer='last_hidden_
 
 
 
-    def forward(model, x):         
-        # x = feature_extractor_vit(images=[im.cpu() for im in x], return_tensors="pt")
-        # x = x.to(device)
+    def forward(model, x): 
         return model(x).logits
-        # if vit_out_layer=='pooler_output':
-        #     return model(**x).pooler_output
-        # else:
-        #     return model(**x).last_hidden_state
 
     transformation = [Lambda(lambda x: feature_extractor_vit(x, return_tensors="pt").pixel_values[0])] # (images=[im.cpu() for im in x], return_tensors="pt"))]
 
@@ -319,62 +321,62 @@ def prepare_MIIL_timm(encoder_name, pretrained, device='cuda', *args, **kwargs):
 #     encoder = TorchModuleWrapper(nn.Sequential(*encoder), keep_bn_in_eval_after_freeze=fix_batchnorms_encoder)
 #     return PreparedModel(encoder, latent_dim, None, None)
 
-def prepare_vissl(encoder_name, link, config, models_path=_models_path, fix_batchnorms_encoder=True, device='cuda', *args, **kwargs):
-    from omegaconf import OmegaConf
-    from vissl.utils.hydra_config import AttrDict    
-    from vissl.utils.hydra_config import compose_hydra_configuration, convert_to_attrdict
-    file_name=f'{encoder_name}.torch'
-    path=f"{models_path}/{file_name}".replace("//","/")
-    if not os.path.isfile(path):
-        os.system(f"wget -q -O {path} {link}")
-    # Config is located at vissl/configs/config/pretrain/simclr/simclr_8node_resnet.yaml.
-    # All other options override the simclr_8node_resnet.yaml config.
+# def prepare_vissl(encoder_name, link, config, models_path=_models_path, fix_batchnorms_encoder=True, device='cuda', *args, **kwargs):
+#     from omegaconf import OmegaConf
+#     from vissl.utils.hydra_config import AttrDict    
+#     from vissl.utils.hydra_config import compose_hydra_configuration, convert_to_attrdict
+#     file_name=f'{encoder_name}.torch'
+#     path=f"{models_path}/{file_name}".replace("//","/")
+#     if not os.path.isfile(path):
+#         os.system(f"wget -q -O {path} {link}")
+#     # Config is located at vissl/configs/config/pretrain/simclr/simclr_8node_resnet.yaml.
+#     # All other options override the simclr_8node_resnet.yaml config.
 
-    cfg = [
-            f'config=pretrain/simclr/models/{config}',
-            f'config.MODEL.WEIGHTS_INIT.PARAMS_FILE={path}', # Specify path for the model weights.
-            'config.MODEL.FEATURE_EVAL_SETTINGS.EVAL_MODE_ON=True', # Turn on model evaluation mode.
-            'config.MODEL.FEATURE_EVAL_SETTINGS.FREEZE_TRUNK_ONLY=True', # Freeze trunk. 
-            'config.MODEL.FEATURE_EVAL_SETTINGS.EXTRACT_TRUNK_FEATURES_ONLY=True', # Extract the trunk features, as opposed to the HEAD.
-            'config.MODEL.FEATURE_EVAL_SETTINGS.SHOULD_FLATTEN_FEATS=False', # Do not flatten features.
-            'config.MODEL.FEATURE_EVAL_SETTINGS.LINEAR_EVAL_FEAT_POOL_OPS_MAP=[["res5avg", ["Identity", []]]]' # Extract only the res5avg features.
-          ]
+#     cfg = [
+#             f'config=pretrain/simclr/models/{config}',
+#             f'config.MODEL.WEIGHTS_INIT.PARAMS_FILE={path}', # Specify path for the model weights.
+#             'config.MODEL.FEATURE_EVAL_SETTINGS.EVAL_MODE_ON=True', # Turn on model evaluation mode.
+#             'config.MODEL.FEATURE_EVAL_SETTINGS.FREEZE_TRUNK_ONLY=True', # Freeze trunk. 
+#             'config.MODEL.FEATURE_EVAL_SETTINGS.EXTRACT_TRUNK_FEATURES_ONLY=True', # Extract the trunk features, as opposed to the HEAD.
+#             'config.MODEL.FEATURE_EVAL_SETTINGS.SHOULD_FLATTEN_FEATS=False', # Do not flatten features.
+#             'config.MODEL.FEATURE_EVAL_SETTINGS.LINEAR_EVAL_FEAT_POOL_OPS_MAP=[["res5avg", ["Identity", []]]]' # Extract only the res5avg features.
+#           ]
 
-    # Compose the hydra configuration.
-    cfg = compose_hydra_configuration(cfg)
-    # Convert to AttrDict. This method will also infer certain config options
-    # and validate the config is valid.
-    _, cfg = convert_to_attrdict(cfg)
-    from vissl.models import build_model
-    model = build_model(cfg.MODEL, cfg.OPTIMIZER)   
-    from classy_vision.generic.util import load_checkpoint
-    from vissl.utils.checkpoint import init_model_from_consolidated_weights
+#     # Compose the hydra configuration.
+#     cfg = compose_hydra_configuration(cfg)
+#     # Convert to AttrDict. This method will also infer certain config options
+#     # and validate the config is valid.
+#     _, cfg = convert_to_attrdict(cfg)
+#     from vissl.models import build_model
+#     model = build_model(cfg.MODEL, cfg.OPTIMIZER)   
+#     from classy_vision.generic.util import load_checkpoint
+#     from vissl.utils.checkpoint import init_model_from_consolidated_weights
 
-    # Load the checkpoint weights.
-    weights = load_checkpoint(checkpoint_path=cfg.MODEL.WEIGHTS_INIT.PARAMS_FILE)
+#     # Load the checkpoint weights.
+#     weights = load_checkpoint(checkpoint_path=cfg.MODEL.WEIGHTS_INIT.PARAMS_FILE)
 
 
-    # Initializei the model with the simclr model weights.
-    init_model_from_consolidated_weights(
-        config=cfg,
-        model=model,
-        state_dict=weights,
-        state_dict_key_name="classy_state_dict",
-        skip_layers=[],  # Use this if you do not want to load all layers
-    )
-    # transfroms = transforms.Compose([
-    #   transforms.CenterCrop(224),
-    #   transforms.ToTensor(),
-    # ])
+#     # Initializei the model with the simclr model weights.
+#     init_model_from_consolidated_weights(
+#         config=cfg,
+#         model=model,
+#         state_dict=weights,
+#         state_dict_key_name="classy_state_dict",
+#         skip_layers=[],  # Use this if you do not want to load all layers
+#     )
+#     # transfroms = transforms.Compose([
+#     #   transforms.CenterCrop(224),
+#     #   transforms.ToTensor(),
+#     # ])
 
-    print("Weights have loaded")  
-    image = torch.Tensor(torch.ones(5,3,32,32)).to(device)
-    model.to(device)
-    feature_size=np.prod(model(image)[0].shape[1:])
-    def forward(model, x):
-        return model(x)[0]
-    model=TorchModuleWrapper(model, function=forward, keep_bn_in_eval_after_freeze=fix_batchnorms_encoder, flatten_features=False).to(device) #
-    return PreparedModel(model, feature_size, None, None)
+#     print("Weights have loaded")  
+#     image = torch.Tensor(torch.ones(5,3,32,32)).to(device)
+#     model.to(device)
+#     feature_size=np.prod(model(image)[0].shape[1:])
+#     def forward(model, x):
+#         return model(x)[0]
+#     model=TorchModuleWrapper(model, function=forward, keep_bn_in_eval_after_freeze=fix_batchnorms_encoder, flatten_features=False).to(device) #
+#     return PreparedModel(model, feature_size, None, None)
       
 def prepare_swsl(encoder_name, fix_batchnorms_encoder=False, device='cuda', *args, **kwargs):
     import urllib
@@ -386,12 +388,7 @@ def prepare_swsl(encoder_name, fix_batchnorms_encoder=False, device='cuda', *arg
     # model.eval()    
     config = resolve_data_config({}, model=model)
     transform = create_transform(**config)
-
-    # swsl = torch.hub.load('facebookresearch/semi-supervised-ImageNet1K-models', encoder_name, ).to(device)
-    # model.fc=nn.Identity()
     image = torch.Tensor(torch.ones(5,3,32,32)).to(device)
-    # for o in model(transform(image)):
-    #     print(o.shape)
     latent_dim = np.prod(model(image).shape[1:])
     return PreparedModel(TorchModuleWrapper(model, keep_bn_in_eval_after_freeze=fix_batchnorms_encoder), latent_dim, transform.transforms, transform.transforms)
 

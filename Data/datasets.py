@@ -500,7 +500,7 @@ class Datasets_Info:
             self.increment=create_increments(self.n_classes, self.n_tasks) 
             if self.increment!=0:
                 assert sum(self.increment)==self.n_classes
-        self.n_classes_per_task=[int(self.n_classes/self.n_tasks)]*self.n_tasks
+        self.n_classes_per_task=self.increment #[int(self.n_classes/self.n_tasks)]*self.n_tasks
 
 @dataclass
 class CIFAR100_info(Datasets_Info):

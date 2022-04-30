@@ -33,11 +33,10 @@ class ModelContainer(nn.Module):
     @dataclass_json
     @dataclass
     class Options(ClassifierOptions):
-        fix_batchnorms_encoder: bool = 0 #-
-        freeze_encoder: bool = 0 #-
+        fix_batchnorms_encoder: bool = 0 # -
+        freeze_encoder: bool = 0 # -  
         hidden_layer_n: Optional[int]=None # for ViT models would extract the representations of the hidden layer instead of the final output leayer (currently only works with ViT models)
         in_size: Optional[int] = None #-
-        # clip: bool = 0 #-
         vit_out_layer:str = choice('last_hidden_state', 'last_layer', default='last_layer') #- # only metters if clip=0
         pretrained_encoder: bool = 1 #-
         checkpoint: Optional[str] = None # If checkoint path is given, loeads weights into the encoder from the given checkpoint
@@ -56,9 +55,9 @@ class ModelContainer(nn.Module):
         momentum:float = 0.9 #-
         weight_decay:float = 0. #-
 
-        multihead: bool = False #-             
-        lrs_cv:List = field(default_factory=lambda: []) #-
-        lr_anneals_cv:List = field(default_factory=lambda:[]) #- [True,False]) #-
+        multihead: bool = False #-              
+        lrs_cv:List = field(default_factory=lambda: []) #- 
+        lr_anneals_cv:List = field(default_factory=lambda:[True, False]) #- [True,False]) #-
         weight_decays_cv:List =field(default_factory=lambda:[]) #, 1e-3] #-
 
         def serializable_copy(self):
@@ -71,10 +70,8 @@ class ModelContainer(nn.Module):
             self_copy = copy.copy(self)
             return hashlib.md5(str(self_copy).encode('utf-8')).hexdigest()
 
-        def __post_init__(self):
-            self.encoder = encoders[self.encoder_name] #getKeysByValue(encoders,self.encoder_name)[0]
-            # if self.freeze_encoder:
-            #     self.fix_batchnorms_encoder=1
+        def __post_init__(self):  
+            self.encoder = encoders[self.encoder_name]
                 
         def generate_cv_args(self):            
             #generate parameters for task level cross validation
@@ -85,8 +82,8 @@ class ModelContainer(nn.Module):
                     lrs_cv=[0.1*self.lr,self.lr, 10*self.lr]
                 if len(weight_decays_cv)==0:
                         weight_decays_cv=[0, 1e-4, 1e-2]
-                for lr in lrs:
-                    for wd in weight_decays_cv: 
+                for lr in lrs_cv:   
+                    for wd in weight_decays_cv:  
                         for anneal in self.lr_anneals_cv:
                             anneal=bool(anneal)
                             wd=float(wd)
@@ -175,7 +172,8 @@ class ModelContainer(nn.Module):
 
     
     def forward(self, x, task_id=None, *args, **kwargs):
-        if self.args.multihead:
+        if self.args.multihead:  
+            raise NotImplementedError
             assert task_id is not None
         else:
             task_id = None
@@ -279,7 +277,8 @@ class ModelContainer(nn.Module):
             self.model.expand_classifier(clsf)
         else:
             if task_id>0 and self.args.classifier_type not in sklearn_classifiers:
-                if self.args.multihead:    
+                if self.args.multihead:  
+                    raise NotImplementedError 
                     cls = self.prepare_classifier(self.classifier_type,self.feature_size, n_new_classes)[-1].to(self.device)
                     self.model.add_classifier_head(cls)
                 elif expand_single_head:

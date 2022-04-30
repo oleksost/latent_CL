@@ -110,7 +110,7 @@ def prepare_dataloader(args:ArgsGenerator, dataset:Dataset, val_split=0.1, shuff
         # loader = DataLoader(dataset, batch_size=args.batch_size, shuffle=False)
         return loader, None
 
-class FlopsMeter():
+class FlopsMeter():       
     def __init__(self, names: List) -> None:
         #meter for flops counting
         self.meters: Dict[str, SumMeter] = {}

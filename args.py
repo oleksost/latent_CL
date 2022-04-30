@@ -16,6 +16,7 @@ from Data.datasets import datasets as dataset_list,dataset_tuple
   
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
 task_orderings={
+    # random orderings, generated onse and shared across runs
     '4': [[0,1,2,3], [2,3,0,1], [3,2,1,0], [3,0,1,2]], #[1,2,3,4,5],
     '5': [[0,1,2,3,4], [2,3,4,0,1], [3,2,1,4,0], [3,4,0,1,2], [2,3,4,1,0], [0,3,4,2,1]], #[1,2,3,4,5],
     '6': [[0,1,2,3,4,5], [2,3,4,0,1,5], [5,3,2,1,4,0], [3,4,0,1,2,5], [2,3,4,5,1,0], [0,5,3,4,2,1]],
@@ -60,7 +61,7 @@ class ArgsGenerator():
     resolution: Optional[int] = None # Imposes resolution on dataset encodings, if None uses standard resolutions defined in datasets.py
 
     #regime          
-    #finetuning
+    #finetuning        
     finetuning_only_norms: bool = 0 #-
     unfreeze_input_layer: bool = 0 #-
 
@@ -85,10 +86,10 @@ class ArgsGenerator():
     wandb_project:str = 'large_cl' #-
     wandb_notes: str = '' #-
     group_name: Optional[str] = None #-
-    test_every: int = 5 #- 
+    test_every: int = 5 #-  
     record_flops: bool = 1#-
     validate_every: int = 1 #-
-    log_task_similarity: bool = 1#
+    log_task_similarity: bool = 0 #-
     save_final_model: bool = 1 #-    
     test_old_tasks: bool = 0 #- if 'True' logs a wandb table of accuracies on all tasks seen sofar every 'test_every' epochs (can be used to reproduce the figure from Ethan Dyer's video)
 
