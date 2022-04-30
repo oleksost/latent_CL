@@ -1,4 +1,4 @@
-### This repo contains code used for the paper "Foundational Models for Continual Learning: An Emperical Study of Latent Replay".
+### This repo contains code used for the paper "Foundational Models for Continual Learning: An Empirical Study of Latent Replay".
  
 Setting up things:  clone the repo, create a vitual envoronment (e.g. using conda), install the **requirements.txt**.
 
