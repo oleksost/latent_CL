@@ -1,4 +1,4 @@
-### This repo contains code used for the paper "Foundational Models for Continual Learning: An Empirical Study of Latent Replay".
+### This repo contains code used for the paper "Continual Learning with Foundation Models: An Empirical Study of Latent Replay" [arxiv](https://arxiv.org/abs/2205.00329).
  
 Setting up things:  clone the repo, create a vitual envoronment (e.g. using conda), install the **requirements.txt**.
 
@@ -17,11 +17,11 @@ python dataset_encoder.py --pretrained_encoder 1 --regime latent_ER --dataset_na
 See **example.py** for how to iterate over the encoded datasets.
  
 ----
-The list of available encoders can be found under [Models/encoders.py](https://github.com/oleksost/latent_CL/blob/master/models/encoders.py). A list of currently available datasets can be found in [Data/datasets.py](https://github.com/oleksost/latent_CL/blob/master/Data/datasets.py)
+The list of available encoders can be found under [Models/encoders.py](https://github.com/oleksost/latent_CL/blob/main/Models/encoders.py). A list of currently available datasets can be found in [Data/datasets.py](https://github.com/oleksost/latent_CL/blob/main/Data/datasets.py)
  
 To add new encoder (feature extractor):
-1. Add an [EncoderTuple]() with information about the new feature extractor to the list of encoders [here](). 
-2. The first argument 'partial_encoder' should be a pointer to a (partialy initialized) function that prepares the new feature encoder (see e.g. an example of [prepare_dino]() function). This function should return an instance of [PreparedModel]() class.
+1. Add an [EncoderTuple]() with information about the new feature extractor to the list of encoders [here](https://github.com/oleksost/latent_CL/blob/dcba9e7424ff5f6452ddd905904e521c4f29f11d/Models/encoders.py#L450). 
+2. The first argument 'partial_encoder' should be a pointer to a (partialy initialized) function that prepares the new feature encoder (see e.g. an example of [prepare_dino](https://github.com/oleksost/latent_CL/blob/dcba9e7424ff5f6452ddd905904e521c4f29f11d/Models/encoders.py#L202) function). This function should return an instance of [PreparedModel](https://github.com/oleksost/latent_CL/blob/dcba9e7424ff5f6452ddd905904e521c4f29f11d/Models/encoders.py#L36) class.
 ----
     
 ## Training a classifier with latent ER
